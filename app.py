@@ -26,7 +26,6 @@ st.markdown("""
 <style>
     /* 全局紧凑 */
     .block-container { padding-top: 2rem; padding-bottom: 1rem; }
-    .stAppHeader { display: none; }
     /* 题目正文 */
     .question-text {
         font-size: 1.1rem;
