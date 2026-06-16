@@ -553,14 +553,16 @@ def main() -> None:
         "shortanswer": "简答题",
     }
     qtype = question["type"]
-    h_left, h_right = st.columns([3, 2])
+    h_left, h_right = st.columns([5, 2])
     with h_left:
         st.subheader(f"第 {question['id']} 题 · {type_labels.get(qtype, qtype)}")
     with h_right:
-        st.progress(
-            (idx + 1) / total,
-            text=f"{idx + 1} / {total}",
+        st.markdown(
+            f"<div style='text-align:right;color:#888;font-size:0.9rem;"
+            f"padding-top:0.5rem'>{idx + 1} / {total}</div>",
+            unsafe_allow_html=True,
         )
+        st.progress((idx + 1) / total)
 
     # ── 题目正文 ──
     st.markdown(
