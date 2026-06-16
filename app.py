@@ -323,7 +323,7 @@ def render_single_choice(question: dict, shuffled_opts: list[str],
             if is_tf:
                 # 判断题：根据选项文本中是否含"正确/对"映射到 T/F
                 original_answer = "T" if ("正确" in selected_text or "对" in selected_text) else "F"
-                correct_display = "正确" if original_answer == "T" else "错误"
+                correct_display = "正确" if question["answer"].strip().upper() == "T" else "错误"
             else:
                 # 单选题：显示字母 → 原始字母
                 display_answer = option_letters[selected_idx]
