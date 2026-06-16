@@ -569,13 +569,20 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    # ── 选项打乱（确定性，以题目索引为种子）──
-    if qtype in ("single", "truefalse", "multiple"):
+    # ── 选项打乱（单选/多选打乱，判断题保持原序）──
+    if qtype == "truefalse":
+        # 判断题不打乱，只补字母前缀 "A. 正确" "B. 错误"
+        if record_key not in st.session_state.shuffle_maps:
+            opts = question["options"]
+            shuffled_opts = [f"{chr(ord('A') + i)}. {opts[i]}" for i in range(len(opts))]
+            st.session_state.shuffle_maps[record_key] = (shuffled_opts, {}, {})
+    elif qtype in ("single", "multiple"):
         if record_key not in st.session_state.shuffle_maps:
             shuffled_opts, fwd_map, rev_map = build_shuffled_options(
                 question["options"], record_key
             )
             st.session_state.shuffle_maps[record_key] = (shuffled_opts, fwd_map, rev_map)
+    if qtype in ("single", "truefalse", "multiple"):
         shuffled_opts, fwd_map, rev_map = st.session_state.shuffle_maps[record_key]
     else:
         shuffled_opts, fwd_map, rev_map = question["options"], {}, {}
