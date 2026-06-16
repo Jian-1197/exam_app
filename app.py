@@ -243,8 +243,11 @@ def render_answer_peek(question: dict, rev_map: dict[str, str] | None = None) ->
     st.info("💡 答案预览（未提交）")
     answer = question.get("answer")
     if answer:
-        # 若选项已打乱，将原始答案转为显示字母并排序
-        if rev_map:
+        if question["type"] == "truefalse":
+            # 判断题：T/F → 正确/错误
+            answer = "正确" if str(answer).strip().upper() == "T" else "错误"
+        elif rev_map:
+            # 若选项已打乱，将原始答案转为显示字母并排序
             if isinstance(answer, list):
                 answer = sorted(rev_map.get(a, a) for a in answer)
             else:
@@ -265,15 +268,29 @@ def render_single_choice(question: dict, shuffled_opts: list[str],
     is_submitted = record_key in st.session_state.submitted
     answer_shown = record_key in st.session_state.show_answer
 
-    # 恢复之前的选项（记录中存的是原始字母，需转回显示字母）
+    # 恢复之前的选项
     prev = st.session_state.records.get(record_key, {})
     prev_idx = 0
     if prev.get("user_answer"):
-        prev_display = rev_map.get(prev["user_answer"], prev["user_answer"]) if rev_map else prev["user_answer"]
-        for i, letter in enumerate(option_letters):
-            if letter.upper() == prev_display.strip().upper():
-                prev_idx = i
-                break
+        is_tf = (question["type"] == "truefalse")
+        if is_tf:
+            # 判断题：T → "正确"，F → "错误"，匹配选项文本
+            target = "正确" if str(prev["user_answer"]).strip().upper() == "T" else "错误"
+            for i, opt in enumerate(shuffled_opts):
+                if target in opt:
+                    prev_idx = i
+                    break
+        elif rev_map:
+            prev_display = rev_map.get(prev["user_answer"], prev["user_answer"])
+            for i, letter in enumerate(option_letters):
+                if letter.upper() == prev_display.strip().upper():
+                    prev_idx = i
+                    break
+        else:
+            for i, letter in enumerate(option_letters):
+                if letter.upper() == str(prev["user_answer"]).strip().upper():
+                    prev_idx = i
+                    break
 
     selected_idx = st.radio(
         "请选择一个答案：",
@@ -300,17 +317,25 @@ def render_single_choice(question: dict, shuffled_opts: list[str],
     with c_right:
         if st.button("📤 提交答案", key=f"sub_{record_key}",
                      disabled=is_submitted, use_container_width=True):
-            display_answer = option_letters[selected_idx]
-            # 翻译为原始字母再判题
-            original_answer = fwd_map.get(display_answer, display_answer) if fwd_map else display_answer
-            correct_original = question["answer"]
-            is_correct = check_single(original_answer, correct_original)
-            # 正确答案转为显示字母
-            correct_display = rev_map.get(correct_original, correct_original) if rev_map else correct_original
+            is_tf = (question["type"] == "truefalse")
+            selected_text = shuffled_opts[selected_idx]
+
+            if is_tf:
+                # 判断题：根据选项文本中是否含"正确/对"映射到 T/F
+                original_answer = "T" if ("正确" in selected_text or "对" in selected_text) else "F"
+                correct_display = "正确" if original_answer == "T" else "错误"
+            else:
+                # 单选题：显示字母 → 原始字母
+                display_answer = option_letters[selected_idx]
+                original_answer = fwd_map.get(display_answer, display_answer) if fwd_map else display_answer
+                correct_original_letter = question["answer"]
+                correct_display = rev_map.get(correct_original_letter, correct_original_letter) if rev_map else correct_original_letter
+
+            is_correct = check_single(original_answer, question["answer"])
             st.session_state.records[record_key] = {
-                "user_answer": original_answer,       # 存原始字母（规范化）
+                "user_answer": original_answer,
                 "is_correct": is_correct,
-                "correct_answer": correct_display,    # 显示字母
+                "correct_answer": correct_display,
                 "explanation": question.get("explanation", ""),
             }
             st.session_state.submitted.add(record_key)
