@@ -15,7 +15,7 @@ from exam_app.models.question_bank import QuestionBank
 
 # ── 页面配置 ──────────────────────────────────────────────
 st.set_page_config(
-    page_title="刷题助手 · CAIP 强脑赛道",
+    page_title="刷题助手",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -464,8 +464,7 @@ def main() -> None:
     # ═══ 侧边栏 ═══
     with st.sidebar:
         st.title("🧠 刷题助手")
-        st.caption("2026 睿抗 · CAIP 强脑赛道")
-        st.caption("大模型及智能体应用")
+        st.caption("通用刷题练习平台")
 
         if not banks:
             st.warning("未找到题库\n请将 `.json` 放入 `exam_app/quiz_banks/`")
